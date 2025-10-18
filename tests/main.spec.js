@@ -3,11 +3,13 @@ import { LoginPage } from './LoginPage.js'
 import { DashboardPage } from './DashboardPage.js'
 import { UsersPage } from './UsersPage.js'
 import { TaskStatusesPage } from './TaskStatusesPage.js'
+import { LabelsPage } from './LabelsPage.js'
 
 let loginPage
 let dashboardPage
 let userPage
 let taskStatusesPage
+let labelsPage
 
 const user = {
   login: 'user',
@@ -23,12 +25,17 @@ const newStatus = {
   slug: 'to_do',
 }
 
+const newLabel = {
+  name: 'incident',
+}
+
 test.beforeEach(async ({ page }) => {
   await page.goto('http://localhost:5173')
   loginPage = new LoginPage(page)
   dashboardPage = new DashboardPage(page)
   userPage = new UsersPage(page)
   taskStatusesPage = new TaskStatusesPage(page)
+  labelsPage = new LabelsPage(page)
 })
 
 test.describe('Проверки авторизации и выхода из аккаунта', async () => {
@@ -132,5 +139,49 @@ test.describe('Проверки работы со статусами задач'
     await taskStatusesPage.selectAllRows()
     await taskStatusesPage.deleteRowButton.click()
     await expect(page.getByText(/No Task statuses yet/)).toBeVisible()
+  })
+})
+
+test.describe('Проверки работы с метками', async () => {
+  test.beforeEach(async () => {
+    await loginPage.signIn(user.login, user.password)
+    await dashboardPage.menu.labels.click()
+  })
+
+  test('Успешное создание метки', async () => {
+    await labelsPage.createLabelButton.click()
+    await labelsPage.createOrEditLabel(newLabel.name)
+    await dashboardPage.menu.labels.click()
+    const labelRow = await labelsPage.getRowLabelInList(newLabel.name)
+    await expect(labelRow).toBeVisible()
+  })
+
+  test('Успешное редактирование метки', async ({ page }) => {
+    await labelsPage.createLabelButton.click()
+    await labelsPage.createOrEditLabel(newLabel.name)
+    await dashboardPage.menu.labels.click()
+    await labelsPage.goEditLabel(newLabel.name)
+    await labelsPage.createOrEditLabel('editedincident')
+    await dashboardPage.menu.labels.click()
+    const oldLabelRow = await labelsPage.getRowLabelInList(newLabel.name)
+    const labelRow = await labelsPage.getRowLabelInList('editedincident')
+    await page.screenshot({ path: 'screenshot.png' })
+    await expect(labelRow).toBeVisible()
+    //await expect(oldLabelRow).not.toBeVisible()
+  })
+
+  test('Успешное удаление одной метки', async () => {
+    await labelsPage.createLabelButton.click()
+    await labelsPage.createOrEditLabel(newLabel.name)
+    await dashboardPage.menu.labels.click()
+    await labelsPage.deleteLabel(newLabel.name)
+    const labelRow = await labelsPage.getRowLabelInList(newLabel.name)
+    await expect(labelRow).not.toBeVisible()
+  })
+
+  test('Успешное удаление всех меток', async ({ page }) => {
+    await labelsPage.selectAllRows()
+    await labelsPage.deleteRowButton.click()
+    await expect(page.getByText(/No Labels yet/)).toBeVisible()
   })
 })
