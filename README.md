@@ -1,16 +1,19 @@
-# React + Vite
+# Тестирование канбан-доски
+## Что есть в проекте
+- Приложение канбан-доски на React
+- Набор автоматизированных тестов, покрывающих основные пользовательские сценарии
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Что сделала я
+Я разработала и реализовала **автоматизированные тесты** для данного проекта. Для тестирования проекта используется Playwright.
 
-Currently, two official plugins are available:
+## Установка и запуск проекта
+git clone https://github.com/Naryzhnaia/qa-auto-engineer-javascript-project-90.git
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+npm i
+Чтобы запустить приложение npm run dev
+Чтобы запустить тесты npm playwright test 
 
-## React Compiler
+## Hexlet tests, SonarQube
+[![hexlet-check](https://github.com/Naryzhnaia/qa-auto-engineer-javascript-project-90/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/Naryzhnaia/qa-auto-engineer-javascript-project-90/actions/workflows/hexlet-check.yml)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Naryzhnaia_qa-auto-engineer-javascript-project-90&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Naryzhnaia_qa-auto-engineer-javascript-project-90)
