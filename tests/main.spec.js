@@ -255,7 +255,7 @@ test.describe('Проверки работы с задачами', async () => {
     await expect(card).not.toBeVisible()
   })
 
-  test('Отображаются задачи по фильтру "Assignee", "Status", "Label"', async ({ page }) => {
+  test('Отображаются задачи по фильтру "Assignee", "Status", "Label"', async () => {
     await dashboardPage.menu.users.click()
     await userPage.createUserButton.click()
     await userPage.createUser(userCard2.email, userCard2.firstName, userCard2.lastName)
