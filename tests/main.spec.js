@@ -4,12 +4,14 @@ import { DashboardPage } from './DashboardPage.js'
 import { UsersPage } from './UsersPage.js'
 import { TaskStatusesPage } from './TaskStatusesPage.js'
 import { LabelsPage } from './LabelsPage.js'
+import { TasksPage } from './TasksPage.js'
 
 let loginPage
 let dashboardPage
 let userPage
 let taskStatusesPage
 let labelsPage
+let tasksPage
 
 const user = {
   login: 'user',
@@ -29,6 +31,22 @@ const newLabel = {
   name: 'incident',
 }
 
+const newTask = {
+  title: 'Fix bug',
+  content: 'fix major prod bug',
+}
+
+const userCard2 = {
+  email: 'email@inbox.com',
+  firstName: 'User2',
+  lastName: 'FamilyName2',
+  title: 'Create feature',
+  content: 'implement feature',
+  status: 'reopen',
+  statusSlug: 'reopened',
+  label: 'implementation',
+}
+
 test.beforeEach(async ({ page }) => {
   await page.goto('http://localhost:5173')
   loginPage = new LoginPage(page)
@@ -36,6 +54,7 @@ test.beforeEach(async ({ page }) => {
   userPage = new UsersPage(page)
   taskStatusesPage = new TaskStatusesPage(page)
   labelsPage = new LabelsPage(page)
+  tasksPage = new TasksPage(page)
 })
 
 test.describe('Проверки авторизации и выхода из аккаунта', async () => {
@@ -156,18 +175,15 @@ test.describe('Проверки работы с метками', async () => {
     await expect(labelRow).toBeVisible()
   })
 
-  test('Успешное редактирование метки', async ({ page }) => {
+  test('Успешное редактирование метки', async () => {
     await labelsPage.createLabelButton.click()
     await labelsPage.createOrEditLabel(newLabel.name)
     await dashboardPage.menu.labels.click()
     await labelsPage.goEditLabel(newLabel.name)
     await labelsPage.createOrEditLabel('editedincident')
     await dashboardPage.menu.labels.click()
-    const oldLabelRow = await labelsPage.getRowLabelInList(newLabel.name)
     const labelRow = await labelsPage.getRowLabelInList('editedincident')
-    await page.screenshot({ path: 'screenshot.png' })
     await expect(labelRow).toBeVisible()
-    //await expect(oldLabelRow).not.toBeVisible()
   })
 
   test('Успешное удаление одной метки', async () => {
@@ -183,5 +199,95 @@ test.describe('Проверки работы с метками', async () => {
     await labelsPage.selectAllRows()
     await labelsPage.deleteRowButton.click()
     await expect(page.getByText(/No Labels yet/)).toBeVisible()
+  })
+})
+
+test.describe('Проверки работы с задачами', async () => {
+  test.beforeEach(async () => {
+    await loginPage.signIn(user.login, user.password)
+    await dashboardPage.menu.users.click()
+    await userPage.createUserButton.click()
+    await userPage.createUser(newUser.email, newUser.firstName, newUser.lastName)
+    await dashboardPage.menu.taskStatuses.click()
+    await taskStatusesPage.createStatusButton.click()
+    await taskStatusesPage.createOrEditStatus(newStatus.name, newStatus.slug)
+    await dashboardPage.menu.labels.click()
+    await labelsPage.createLabelButton.click()
+    await labelsPage.createOrEditLabel(newLabel.name)
+    await dashboardPage.menu.tasks.click()
+  })
+
+  test('Успешное создание задачи только с обязательными полями', async () => {
+    await tasksPage.createTaskButton.click()
+    await tasksPage.createTaskShort(newUser.email, newTask.title, newStatus.name)
+    await dashboardPage.menu.tasks.click()
+    await expect(tasksPage.getColumn(newStatus.name).getByText(newTask.title)).toBeVisible()
+    await expect(tasksPage.getCard(newTask.title)).toBeVisible()
+  })
+
+  test('Успешное создание задачи только со всеми полями', async () => {
+    await tasksPage.createTaskButton.click()
+    await tasksPage.createOrEditTaskFull(newUser.email, newTask.title, newTask.content, newStatus.name, newLabel.name)
+    await dashboardPage.menu.tasks.click()
+    await expect(tasksPage.getColumn(newStatus.name).getByText(newTask.title)).toBeVisible()
+    await expect(tasksPage.getCard(newTask.title)).toBeVisible()
+  })
+
+  test('Успешное редактирование задачи', async () => {
+    await tasksPage.createTaskButton.click()
+    await tasksPage.createOrEditTaskFull(newUser.email, newTask.title, newTask.content, newStatus.name, newLabel.name)
+    await dashboardPage.menu.tasks.click()
+    await tasksPage.goEditTask(newTask.title)
+    await tasksPage.createOrEditTaskFull(newUser.email, 'editedtitle', 'editedContent', newStatus.name, newLabel.name)
+    await dashboardPage.menu.tasks.click()
+    const oldCard = await tasksPage.getColumn(newStatus.name).getByText(newTask.title)
+    const card = await tasksPage.getColumn(newStatus.name).getByText('editedTitle')
+    await expect(card).toBeVisible()
+    await expect(oldCard).not.toBeVisible()
+  })
+
+  test('Успешное удаление задачи', async () => {
+    await tasksPage.createTaskButton.click()
+    await tasksPage.createOrEditTaskFull(newUser.email, newTask.title, newTask.content, newStatus.name, newLabel.name)
+    await dashboardPage.menu.tasks.click()
+    await tasksPage.deleteTask(newTask.title)
+    const card = await tasksPage.getColumn(newStatus.name).getByText(newTask.title)
+    await expect(card).not.toBeVisible()
+  })
+
+  test('Отображаются задачи по фильтру "Assignee", "Status", "Label"', async ({ page }) => {
+    await dashboardPage.menu.users.click()
+    await userPage.createUserButton.click()
+    await userPage.createUser(userCard2.email, userCard2.firstName, userCard2.lastName)
+    await dashboardPage.menu.taskStatuses.click()
+    await taskStatusesPage.createStatusButton.click()
+    await taskStatusesPage.createOrEditStatus(userCard2.status, userCard2.statusSlug)
+    await dashboardPage.menu.labels.click()
+    await labelsPage.createLabelButton.click()
+    await labelsPage.createOrEditLabel(userCard2.label)
+    await dashboardPage.menu.tasks.click()
+
+    await tasksPage.createTaskButton.click()
+    await tasksPage.createOrEditTaskFull(newUser.email, newTask.title, newTask.content, newStatus.name, newLabel.name)
+    await dashboardPage.menu.tasks.click()
+    await tasksPage.createTaskButton.click()
+    await page.screenshot({ path: 'screenshot.png' })
+    await tasksPage.createOrEditTaskFull(userCard2.email, userCard2.title, userCard2.content, userCard2.status, userCard2.label)
+    await dashboardPage.menu.tasks.click()
+    await tasksPage.filterByAssignee(newUser.email)
+    const card = await tasksPage.getColumn(newStatus.name).getByText(newTask.title)
+    const card2 = await tasksPage.getColumn(userCard2.status).getByText(userCard2.title)
+    await expect(card).toBeVisible()
+    await expect(card2).not.toBeVisible()
+
+    await tasksPage.clearFilterAssignee()
+    await tasksPage.filterByStatus(userCard2.status)
+    await expect(card2).toBeVisible()
+    await expect(card).not.toBeVisible()
+
+    await tasksPage.clearFilterStatus()
+    await tasksPage.filterByLabel(newLabel.name)
+    await expect(card).toBeVisible()
+    await expect(card2).not.toBeVisible()
   })
 })
