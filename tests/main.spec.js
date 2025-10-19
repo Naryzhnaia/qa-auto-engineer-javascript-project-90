@@ -271,7 +271,6 @@ test.describe('Проверки работы с задачами', async () => {
     await tasksPage.createOrEditTaskFull(newUser.email, newTask.title, newTask.content, newStatus.name, newLabel.name)
     await dashboardPage.menu.tasks.click()
     await tasksPage.createTaskButton.click()
-    await page.screenshot({ path: 'screenshot.png' })
     await tasksPage.createOrEditTaskFull(userCard2.email, userCard2.title, userCard2.content, userCard2.status, userCard2.label)
     await dashboardPage.menu.tasks.click()
     await tasksPage.filterByAssignee(newUser.email)
